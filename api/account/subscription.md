@@ -16,3 +16,21 @@ checkForMissingDataInSubscriptionObject(object, callback) :
     Check if the JSON object given in parameter has all the data required for subscription.
 
 /****************************************************************************************************/
+
+checkIfPasswordAndConfirmationMatch(password, confirmation, callback) :
+
+  Arguments :
+
+    - password : a string that is user password provided.
+    - confirmation : a string that must be the same as the password provided.
+    - callback : just here to inform that the function returns something.
+
+  Return :
+
+    - callback : return 'true' if the password and its confirmation match or 'false' if they do not match, return 'undefined' if one of the password is missing.
+
+  Description :
+
+    Check if the confirmation password provided match the password given by user.
+
+/****************************************************************************************************/

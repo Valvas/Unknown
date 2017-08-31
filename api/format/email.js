@@ -28,38 +28,3 @@ Format.checkEmailFormat = function(str, callback)
 }
 
 /****************************************************************************************************/
-
-//See 'format.md' line 20.
-
-Format.checkUsernameFormat = function(str, callback)
-{
-  if(str == undefined)
-  {
-    callback(undefined);
-  }
-
-  else
-  {
-    if(str.length < 6 || str.length > 30)
-    {
-      callback(false);
-    }
-
-    else if(str.match(/\s/) != null)
-    {
-      callback(false);
-    }
-
-    else if(str.match(/[^a-zA-Z0-9\s]/) != null)
-    {
-      callback(false);
-    }
-
-    else
-    {
-      callback(true);
-    }
-  }
-}
-
-/****************************************************************************************************/

@@ -20,3 +20,28 @@ Subscription.checkForMissingDataInSubscriptionObject = function(object, callback
 }
 
 /****************************************************************************************************/
+
+//See 'subscription.md' line 20.
+
+Subscription.checkIfPasswordAndConfirmationMatch = function(password, confirmation, callback)
+{
+  if(password == undefined || confirmation == undefined)
+  {
+    callback(undefined);
+  }
+
+  else
+  {
+    if(password != confirmation)
+    {
+      callback(false);
+    }
+
+    else
+    {
+      callback(true);
+    }
+  }
+}
+
+/****************************************************************************************************/
