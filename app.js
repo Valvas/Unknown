@@ -1,3 +1,12 @@
+'use strict';
+
+/**************************************************************************************************************/
+
+const fs        = require('fs');
+const mysql     = require('mysql');
+
+/**************************************************************************************************************/
+
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -8,7 +17,26 @@ var bodyParser = require('body-parser');
 var index = require('./routes/index');
 var users = require('./routes/users');
 
-var app = express();
+/**************************************************************************************************************/
+
+let json = JSON.parse(fs.readFileSync('./json/database.json'));
+
+let connection = mysql.createConnection(
+{
+    host: json['host'],
+    user: json['user'],
+    password: json['password'],
+    database: json['database']
+});
+
+let salt = JSON.parse(fs.readFileSync('./json/salt.json'));
+
+let app = express();
+
+app.set('mysql', connection);
+app.set('salt', salt['salt']);
+
+/**************************************************************************************************************/
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

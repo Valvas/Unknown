@@ -1,0 +1,36 @@
+{
+  "subscription":
+  {
+    "username":
+    {
+      "min-length": 4,
+      "max-length": 24,
+      "required-digit": false,
+      "authorized-digit": true,
+      "required-spaces": false,
+      "authorized-spaces": false,
+      "required-lowercase": false,
+      "authorized-lowercase": true,
+      "required-uppercase": false,
+      "authorized-uppercase": true,
+      "required-special": false,
+      "authorized-special": false
+    },
+
+    "password":
+    {
+      "min-length": 8,
+      "max-length": 64,
+      "required-digit": true,
+      "authorized-digit": true,
+      "required-spaces": false,
+      "authorized-spaces": false,
+      "required-lowercase": false,
+      "authorized-lowercase": true,
+      "required-uppercase": false,
+      "authorized-uppercase": true,
+      "required-special": false,
+      "authorized-special": true
+    }
+  }
+}
