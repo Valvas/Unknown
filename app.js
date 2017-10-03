@@ -7,15 +7,16 @@ const mysql     = require('mysql');
 
 /**************************************************************************************************************/
 
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+let path          = require('path');
+let logger        = require('morgan');
+let express       = require('express');
+let bodyParser    = require('body-parser');
+let favicon       = require('serve-favicon');
+let cookieParser  = require('cookie-parser');
 
-var index = require('./routes/index');
-var users = require('./routes/users');
+let formatTest    = require('./routes/test/format');
+
+let publicSubscription  = require('./routes/public/subscription');
 
 /**************************************************************************************************************/
 
@@ -50,8 +51,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', index);
-app.use('/users', users);
+//Route to execute tests on the api functions.
+app.use('/test/format', formatTest);
+
+//Public routes, does not require an authentication to call.
+app.use('/public/subscription/', publicSubscription);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

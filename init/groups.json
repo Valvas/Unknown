@@ -1,0 +1,37 @@
+{
+  "bronze":
+  {
+    "allow_survey_participation": true,
+    "maximum_survey_participations": 3,
+    "allow_survey_creation": true,
+    "maximum_survey_creations": 1,
+
+    "modify_own_survey": true,
+    "modify_foreign_survey": false,
+    "delete_own_survey": true,
+    "delete_foreign_survey": false,
+
+    "modify_email": true,
+    "modify_password": true,
+    "modify_username": true,
+    "modify_birthdate": true,
+    "modify_gender": true,
+    "modify_country": true,
+    "modify_county": true,
+
+    "call_modify_email": false,
+    "call_modify_password": false,
+    "call_modify_username": false,
+    "call_modify_birthdate": false,
+    "call_modify_gender": false,
+    "call_modify_country": false,
+    "call_modify_county": false,
+
+    "ban_account": false,
+    "unban_account": false,
+    "put_in_blacklist": false,
+    "remove_from_blacklist": false,
+
+    "send_messages": true
+  }
+}

@@ -4,12 +4,13 @@ checkForMissingDataInSubscriptionObject(object, callback) :
 
   Arguments :
 
-    - object : a JSON object with user informations entered in the subscription form (need 'username', 'email', 'password', 'confirmPassword', 'county', 'gender', 'birthdate').
+    - object : a JSON object with user informations entered in the subscription form (need 'username', 'email', 'password', 'confirmPassword', 'country', 'county', 'gender', 'birthdate').
     - callback : just here to inform that the function returns something.
 
   Return :
 
-    - callback : return 'true' if data have been well provided or 'false' if data are missing.
+    - 'true' : data have been well provided.
+    - 'false' : data are missing, return also a message to inform what is missing.
 
   Description :
 
@@ -27,7 +28,8 @@ checkIfPasswordAndConfirmationMatch(password, confirmation, callback) :
 
   Return :
 
-    - callback : return 'true' if the password and its confirmation match or 'false' if they do not match, return 'undefined' if one of the password is missing.
+  - 'true' : the password and its confirmation are the same.
+  - 'false' : data are missing or password and its confirmation are different, return also a message to inform what is the error.
 
   Description :
 
@@ -35,17 +37,20 @@ checkIfPasswordAndConfirmationMatch(password, confirmation, callback) :
 
 /****************************************************************************************************/
 
-putAccountInTheDatabase(object, connection, callback) :
+putAccountInTheDatabase(object, salt, connection, callback) :
 
   Arguments :
 
     - object : a JSON object that contains user's data.
+    - salt : a string that is used to encrypt the password.
     - connection : a database connector used to execute queries to the database.
     - callback : just here to inform that the function returns something.
 
   Return :
 
-    - callback : return 'true' if query to the database succedeed or 'false' if an error occured, return 'undefined' if data are missing or if the database connector does not exist.
+    - 'true' : account well created.
+    - 'false' : an error occured, return also a second parameter in the callback that is a message to inform what is the error.
+    - 'undefined' : data are missing in the object provided or sql connector is missing.
 
   Description :
 
@@ -63,7 +68,9 @@ encryptPassword(salt, password, callback) :
 
   Return :
 
-    - callback : return the password hashed in case of success, 'false' in case of error and 'undefined' if the password or the salt is missing in the request.
+    - hash : return the password hashed in case of success.
+    - 'false' : in case of error during the execution, return a second parameter that is the error message.
+    - 'undefined' : if the password or the salt used to encrypt are missing.
 
   Description :
 
@@ -81,7 +88,9 @@ checkIfUsernameIsNotAlreadyTaken(username, connection, callback) :
 
   Return :
 
-    - callback : return 'true' if the username has been found in the database and is already taken, 'false' in case of error and 'undefined' is the username has not been found.
+  - 'true' : the username has been found in the database and is already in use.
+  - 'false' : an error occured, return a second parameter that is the error message.
+  - 'undefined' : the username or the sql connector is missing in the parameter.
 
   Description :
 
@@ -99,7 +108,9 @@ checkIfEmailIsNotAlreadyTaken(email, connection, callback) :
 
   Return :
 
-    - callback : return 'true' if the email has been found in the database and is already taken, 'false' in case of error and 'undefined' is the email has not been found.
+    - 'true' : the email has been found in the database and is already in use.
+    - 'false' : an error occured, return a second parameter that is the error message.
+    - 'undefined' : the email or the sql connector is missing in the parameter.
 
   Description :
 
@@ -115,7 +126,8 @@ getCountriesList(callback) :
 
   Return :
 
-    - callback : return a JSON object with the content of the file in case of success. In case of error return 'undefined'.
+    - object : a JSON object with the content of the file in case of success.
+    - 'false' : an error occured, return also a second parameter in the callback that is the error message.
 
   Description :
 
@@ -132,7 +144,8 @@ getCountiesList(country, callback) :
 
   Return :
 
-    - callback : return a JSON object with the content of the file in case of success. In case of error return 'undefined'.
+    - object : a JSON object with all counties from the given country as parameter.
+    - 'false' : returned in case of error or missing data, a second parameter is also returned and contains the error message.
 
   Description :
 
@@ -140,38 +153,40 @@ getCountiesList(country, callback) :
 
 /****************************************************************************************************/
 
-suspendAccount(email, connection, callback) :
+suspendAccount(account, connection, callback) :
 
   Arguments :
 
-    - email : a string that is the email linked to the account that must be suspended.
+    - account : a string that is the encrypted ID linked to the account that must be suspended.
     - connection : a database connector used to execute queries to the database.
     - callback : just here to inform that the function returns something.
 
   Return :
 
-    - callback : return 'undefined' if the account could not be found, 'true' if the account has been suspended and 'false' if the function failed.
+    - 'true' : in case of success.
+    - 'false' : in case of error, return also a second parameter in the callback that is the error message.
 
   Description :
 
-    Put the field 'activated' to 0 for the account linked to the email given in argument (the account cannot be used anymore).
+    Put the field 'activated' to 0 for the account linked to the email given as argument (the account cannot be used anymore).
 
 /****************************************************************************************************/
 
-rehabilitateAccount(email, connection, callback) :
+rehabilitateAccount(account, connection, callback) :
 
   Arguments :
 
-    - email : a string that is the email linked to the account that must be rehabilitated.
+    - account : a string that is the encrypted ID linked to the account that must be rehabilitated.
     - connection : a database connector used to execute queries to the database.
     - callback : just here to inform that the function returns something.
 
   Return :
 
-    - callback : return 'undefined' if the account could not be found, 'true' if the account has been rehabilitated and 'false' if the function failed.
+  - 'true' : in case of success.
+  - 'false' : in case of error, return also a second parameter in the callback that is the error message.
 
   Description :
 
     Put the field 'activated' to 1 for the account linked to the email given in argument (the account can now be used).
-    
+
 /****************************************************************************************************/

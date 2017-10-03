@@ -1,40 +1,43 @@
 'use strict';
 
+const fs = require('fs');
+const functions = require('../functions');
 
-const fs          = require('fs');
-const bcrypt      = require('bcrypt');
-
-let Subscription = module.exports = {};
+let subscription = module.exports = {};
 
 /****************************************************************************************************/
 
 //See 'subscription.md' line 3.
 
-Subscription.checkForMissingDataInSubscriptionObject = function(object, callback)
+subscription.checkForMissingDataInSubscriptionObject = function(object, callback)
 {
-  if(object['username'] == undefined){ callback(false, 'ERROR : username is missing !'); }
-  if(object['password'] == undefined){ callback(false, 'ERROR : password is missing !'); }
-  if(object['confirmPassword'] == undefined){ callback(false, 'ERROR : password confirmation is missing !'); }
-  if(object['email'] == undefined){ callback(false, 'ERROR : email is missing !'); }
-  if(object['county'] == undefined){ callback(false, 'ERROR : county is missing !'); }
-  if(object['gender'] == undefined){ callback(false, 'ERROR : gender is missing !'); }
-  if(object['birthdate'] == undefined){ callback(false, 'ERROR : birthdate is missing !'); }
+  if(object['username'] == undefined){ callback(false, 406, 'ERROR : username is missing !'); }
+  else if(object['password'] == undefined){ callback(false, 406, 'ERROR : password is missing !'); }
+  else if(object['confirmPassword'] == undefined){ callback(false, 406, 'ERROR : password confirmation is missing !'); }
+  else if(object['email'] == undefined){ callback(false, 406, 'ERROR : email is missing !'); }
+  else if(object['country'] == undefined){ callback(false, 406, 'ERROR : country is missing !'); }
+  else if(object['county'] == undefined){ callback(false, 406, 'ERROR : county is missing !'); }
+  else if(object['gender'] == undefined){ callback(false, 406, 'ERROR : gender is missing !'); }
+  else if(object['birthdate'] == undefined){ callback(false, 406, 'ERROR : birthdate is missing !'); }
 
-  callback(true, undefined);
+  else
+  {
+    callback(true);
+  }
 }
 
 /****************************************************************************************************/
 
-//See 'subscription.md' line 20.
+//See 'subscription.md' line 21.
 
-Subscription.checkIfPasswordAndConfirmationMatch = function(password, confirmation, callback)
+subscription.checkIfPasswordAndConfirmationMatch = function(password, confirmation, callback)
 {
-  if(password == undefined){ callback(false, 'ERROR : password is missing !'); }
-  if(confirmation == undefined){ callback(false, 'ERROR : confirmation password is missing !'); }
+  if(password == undefined){ callback(false, 406, 'ERROR : password is missing !'); }
+  if(confirmation == undefined){ callback(false, 406, 'ERROR : confirmation password is missing !'); }
 
   if(password != confirmation)
   {
-    callback(false, 'ERROR : the passwords are different !');
+    callback(false, 406, 'ERROR : the passwords are different !');
   }
 
   else
@@ -45,71 +48,78 @@ Subscription.checkIfPasswordAndConfirmationMatch = function(password, confirmati
 
 /****************************************************************************************************/
 
-//See 'subscription.md' line 38.
+//See 'subscription.md' line 40.
 
-Subscription.putAccountInTheDatabase = function(object, connection, callback)
+subscription.putAccountInTheDatabase = function(object, salt, connection, callback)
 {
-  if(object == undefined){ callback(false, 'ERROR : account data are missing !'); }
-  if(connection == undefined){ callback(false, 'ERROR : sql connector is missing !'); }
+  if(object == undefined){ callback(false, 406, 'ERROR : account data are missing !'); }
+  if(connection == undefined){ callback(false, 406, 'ERROR : sql connector is missing !'); }
 
-  connection.query(`INSERT INTO account (username, email, password, county, gender, birthdate, activated) VALUES ("${object['username']}", "${object['email']}", "${object['password']}", "${object['county']}", "${object['gender']}", "${object['birthdate']}", 0)`, function(err, result)
+  functions.encryptPassword(salt, object['password'], function(hash, code, message)
   {
-    if(err)
+    if(hash == false)
     {
-      callback(false, 'ERROR : ' + err + ' !');
+      callback(false, code, message);
     }
 
     else
     {
-      callback(true, undefined);
+      connection.query(`INSERT INTO account (username, email, password, country, county, gender, birthdate, activated) VALUES ("${object['username']}", "${object['email']}", "${hash}", "${object['country']}", "${object['county']}", "${object['gender']}", "${object['birthdate']}", 0)`, function(err, account)
+      {
+        if(err)
+        {
+          callback(false, 500, 'ERROR : ' + err.message + ' !');
+        }
+
+        else
+        {
+          if(account.insertId == undefined)
+          {
+            callback(false, 500, 'ERROR : account could not be created !');
+          }
+
+          else
+          {
+            connection.query(`UPDATE account SET number = MD5(${account.insertId}) WHERE id = ${account.insertId}`, function(err, result)
+            {
+              if(err)
+              {
+                callback(false, 500, 'ERROR : ' + err.message + ' !');
+              }
+
+              else
+              {
+                callback(true);
+              }
+            });
+          }
+        }
+      });
     }
   });
 }
 
 /****************************************************************************************************/
 
-//See 'subscription.md' line 56.
+//See 'subscription.md' line 80.
 
-Subscription.encryptPassword = function(salt, password, callback)
+subscription.checkIfUsernameIsNotAlreadyTaken = function(username, connection, callback)
 {
-  if(salt == undefined){ callback(false, 'ERROR : salt is missing !'); }
-  if(password == undefined){ callback(false, 'ERROR : password is missing !'); }
-
-  bcrypt.hash(password, salt, function(err, hash)
-  {
-    if(err)
-    {
-      callback(false, 'ERROR : ' + err + ' !');
-    }
-
-    else
-    {
-      callback(hash);
-    }
-  });
-}
-
-/****************************************************************************************************/
-
-//See 'subscription.md' line 74.
-
-Subscription.checkIfUsernameIsNotAlreadyTaken = function(username, connection, callback)
-{
-  if(email == undefined){ callback(false, 'ERROR : email is missing !'); }
-  if(connection == undefined){ callback(false, 'ERROR : sql connector is missing !'); }
+  if(email == undefined){ callback(false, 406, 'ERROR : email is missing !'); }
+  if(connection == undefined){ callback(false, 406, 'ERROR : sql connector is missing !'); }
 
   connection.query(`SELECT id FROM account WHERE username = "${username}"`, function(err, result)
   {
     if(err)
     {
-      callback(false, 'ERROR : ' + err + ' !');
+      callback(false, 500, 'ERROR : ' + err.message + ' !');
     }
 
     else
     {
       if(result.length > 0)
       {
-        callback(true);
+        callback(true, 406, 'ERROR : username already in use !');
       }
 
       else
@@ -122,25 +132,25 @@ Subscription.checkIfUsernameIsNotAlreadyTaken = function(username, connection, c
 
 /****************************************************************************************************/
 
-//See 'subscription.md' line 92.
+//See 'subscription.md' line 100.
 
-Subscription.checkIfEmailIsNotAlreadyTaken = function(email, connection, callback)
+subscription.checkIfEmailIsNotAlreadyTaken = function(email, connection, callback)
 {
-  if(email == undefined){ callback(false, 'ERROR : email is missing !'); }
-  if(connection == undefined){ callback(false, 'ERROR : sql connector is missing !'); }
+  if(email == undefined){ callback(false, 406, 'ERROR : email is missing !'); }
+  if(connection == undefined){ callback(false, 406, 'ERROR : sql connector is missing !'); }
 
   connection.query(`SELECT id FROM account WHERE email = "${email}"`, function(err, result)
   {
     if(err)
     {
-      callback(false, 'ERROR : ' + err + ' !');
+      callback(false, 500, 'ERROR : ' + err.message + ' !');
     }
 
     else
     {
       if(result.length > 0)
       {
-        callback(true);
+        callback(true, 406, 'ERROR : email already in use !');
       }
 
       else
@@ -153,15 +163,15 @@ Subscription.checkIfEmailIsNotAlreadyTaken = function(email, connection, callbac
 
 /****************************************************************************************************/
 
-//See 'subscription.md' line 110.
+//See 'subscription.md' line 120.
 
-Subscription.getCountriesList = function(callback)
+subscription.getCountriesList = function(callback)
 {
-  fs.readFile('../../json/countries.json', function(err, data)
+  fs.readFile('./json/countries.json', function(err, data)
   {
     if(err)
     {
-      callback(false, 'ERROR : ' + err + ' !');
+      callback(false, 500, 'ERROR : ' + err.message + ' !');
     }
 
     else
@@ -170,7 +180,7 @@ Subscription.getCountriesList = function(callback)
 
       if(json == undefined)
       {
-        callback(false, 'ERROR : could not parse data !');
+        callback(false, 500, 'ERROR : could not parse data !');
       }
 
       else
@@ -183,86 +193,92 @@ Subscription.getCountriesList = function(callback)
 
 /****************************************************************************************************/
 
-//See 'subscription.md' line 126.
+//See 'subscription.md' line 137.
 
-Subscription.getCountiesList = function(country, callback)
+subscription.getCountiesList = function(country, callback)
 {
-  if(country == undefined){ callback(false, 'ERROR : country is missing !'); }
-
-  fs.readFile('../../json/countries.json', function(err, data)
+  if(country == undefined)
   {
-    if(err)
-    {
-      callback(false, 'ERROR : ' + err + ' !');
-    }
+    callback(false, 406, 'ERROR : country is missing !');
+  }
 
-    else
+  else
+  {
+    fs.readFile('./json/countries.json', function(err, data)
     {
-      let json = JSON.parse(data);
-
-      if(json == undefined)
+      if(err)
       {
-        callback(false, 'ERROR : could not parse data !');
+        callback(false, 500, 'ERROR : ' + err.message + ' !');
       }
 
       else
       {
-        if(json['countries'][country] == undefined)
+        let json = JSON.parse(data);
+
+        if(json == undefined)
         {
-          callback(false, 'ERROR : could not find country in the list !');
+          callback(false, 500, 'ERROR : could not parse data !');
         }
 
         else
         {
-          callback(json['countries'][country]);
+          if(json[country] == undefined)
+          {
+            callback(false, 406, 'ERROR : could not find country in the list !');
+          }
+
+          else
+          {
+            callback(json[country]);
+          }
         }
       }
+    });
+  }
+}
+
+/****************************************************************************************************/
+
+//See 'subscription.md' line 155.
+
+subscription.suspendAccount = function(account, connection, callback)
+{
+  if(account == undefined){ callback(false, 406, 'ERROR : account ID is missing !'); }
+  if(connection == undefined){ callback(false, 406, 'ERROR : sql connector is missing !'); }
+
+  connection.query(`UPDATE account SET activated = 0 WHERE number = "${account}"`, function(err, data)
+  {
+    if(err)
+    {
+      callback(false, 500, 'ERROR : ' + err.message + ' !');
+    }
+
+    else
+    {
+      callback(true);
     }
   });
 }
 
 /****************************************************************************************************/
 
-//See 'subscription.md' line 143.
+//See 'subscription.md' line 174.
 
-Subscription.suspendAccount = function(email, connection, callback)
+subscription.rehabilitateAccount = function(account, connection, callback)
 {
-  if(email == undefined){ callback(false, 'ERROR : email is missing !'); }
-  if(connection == undefined){ callback(false, 'ERROR : sql connector is missing !'); }
+  if(account == undefined){ callback(false, 406, 'ERROR : account ID is missing !'); }
+  if(connection == undefined){ callback(false, 406, 'ERROR : sql connector is missing !'); }
 
-  connection.query(`UPDATE account SET activated = 0 WHERE email = "${email}"`, function(err, data)
+  connection.query(`UPDATE account SET activated = 1 WHERE number = "${account}"`, function(err, data)
   {
     if(err)
     {
-      callback(false, 'ERROR : ' + err + ' !');
+      callback(false, 500, 'ERROR : ' + err.message + ' !');
     }
 
     else
     {
-      callback(true, undefined);
-    }
-  });
-}
-
-/****************************************************************************************************/
-
-//See 'subscription.md' line 161.
-
-Subscription.rehabilitateAccount = function(email, connection, callback)
-{
-  if(email == undefined){ callback(false, 'ERROR : email is missing !'); }
-  if(connection == undefined){ callback(false, 'ERROR : sql connector is missing !'); }
-
-  connection.query(`UPDATE account SET activated = 1 WHERE email = "${email}"`, function(err, data)
-  {
-    if(err)
-    {
-      callback(false, 'ERROR : ' + err + ' !');
-    }
-
-    else
-    {
-      callback(true, undefined);
+      callback(true);
     }
   });
 }

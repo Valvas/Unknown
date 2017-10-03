@@ -31,6 +31,12 @@
       "authorized-uppercase": true,
       "required-special": false,
       "authorized-special": true
+    },
+
+    "birthdate":
+    {
+      "min-year": 1890,
+      "max-year": 2000
     }
   }
 }
