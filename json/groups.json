@@ -32,6 +32,8 @@
     "put_in_blacklist": false,
     "remove_from_blacklist": false,
 
-    "send_messages": true
+    "send_messages": true,
+
+    "group_level": 1
   }
 }

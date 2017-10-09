@@ -14,7 +14,10 @@ let bodyParser    = require('body-parser');
 let favicon       = require('serve-favicon');
 let cookieParser  = require('cookie-parser');
 
+let init = require('./init/database/generation');//////////////////////////////
+
 let formatTest    = require('./routes/test/format');
+let functionsTest = require('./routes/test/functions');
 
 let publicSubscription  = require('./routes/public/subscription');
 
@@ -26,8 +29,7 @@ let connection = mysql.createConnection(
 {
     host: json['host'],
     user: json['user'],
-    password: json['password'],
-    database: json['database']
+    password: json['password']
 });
 
 let salt = JSON.parse(fs.readFileSync('./json/salt.json'));
@@ -36,6 +38,8 @@ let app = express();
 
 app.set('mysql', connection);
 app.set('salt', salt['salt']);
+
+init.createDatabase(connection, function(result, message){console.log(`${result} : ${message}`);}); //////////////////////////////////////
 
 /**************************************************************************************************************/
 
@@ -53,6 +57,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //Route to execute tests on the api functions.
 app.use('/test/format', formatTest);
+app.use('/test/functions', functionsTest);
 
 //Public routes, does not require an authentication to call.
 app.use('/public/subscription/', publicSubscription);

@@ -1,6 +1,7 @@
 'use strict';
 
 const functions = require('../functions');
+const database = require('../database/queries');
 
 let blacklist = module.exports = {};
 
@@ -10,54 +11,19 @@ let blacklist = module.exports = {};
 
 blacklist.suspendAccountForGivenTime = function(identifier, time, connection, callback)
 {
-  if(identifier == undefined){ callback(false, 406, 'ERROR : account identifier is missing !'); }
-  if(time == undefined){ callback(false, 406, 'ERROR : time is missing !'); }
-  if(connection == undefined){ callback(false, 406, 'ERROR : sql connector is missing !'); }
+  if(identifier == undefined || time == undefined || connection == undefined) callback(false, 406, 'ERROR : missing parameters !');
 
-  if(time < 60){ callback(false, 406, 'ERROR : time may not be less than a minute !'); }
-  if(time > 3153600000){ callback(false, 406, 'ERROR : time may not be up than a hundred of years !'); }
+  if(time < 60) callback(false, 406, 'ERROR : time may not be less than a minute !');
+  if(time > 3153600000) callback(false, 406, 'ERROR : time may not be up than a hundred of years !');
 
   functions.convertSecondsToDate(time, function(date, code, message)
   {
-    if(date == false)
+    date == false ? callback(false, code, message) :
+
+    database.insertIntoDatabase('blacklist', {"account": identifier, "end": date}, connection, function(result, code, message)
     {
-      callback(false, code, message);
-    }
-
-    else
-    {
-      connection.query(`SELECT end FROM blacklist WHERE account = "${identifier}"`, function(err, result)
-      {
-        if(err)
-        {
-          callback(false, 500, 'ERROR : ' + err.message + ' !');
-        }
-
-        else
-        {
-          if(result.length > 0 && result[0]['end'] > date)
-          {
-            callback(false, 406, 'ERROR : account is already blacklisted for a further date !');
-          }
-
-          else
-          {
-            connection.query(`INSERT INTO blacklist (account, end) VALUES ("${identifier}", ${date})`, function(err, data)
-            {
-              if(err)
-              {
-                callback(false, 500, 'ERROR : ' + err.message + ' !');
-              }
-
-              else
-              {
-                callback(true);
-              }
-            });
-          }
-        }
-      });
-    }
+      result == false ? callback(false, code, message) : callback(true);
+    });
   });
 }
 
@@ -67,26 +33,12 @@ blacklist.suspendAccountForGivenTime = function(identifier, time, connection, ca
 
 blacklist.unSuspendAccount = function(identifier, connection, callback)
 {
-  if(identifier == undefined)
-  {
-    callback(false, 406, 'ERROR : account identifier is missing !');
-  }
+  identifier == undefined ? callback(false, 406, 'ERROR : account identifier is missing !') :
 
-  else
+  database.deleteFromDatabase('blacklist', {"account": identifier}, undefined, connection, function(result, code, message)
   {
-    connection.query(`DELETE FROM blacklist WHERE account = "${identifier}"`, function(err, data)
-    {
-      if(err)
-      {
-        callback(false, 500, 'ERROR : ' + err.message + ' !');
-      }
-
-      else
-      {
-        callback(true);
-      }
-    });
-  }
+    result == false ? callback(false, code, message) : callback(true);
+  });
 }
 
 /****************************************************************************************************/
@@ -95,36 +47,12 @@ blacklist.unSuspendAccount = function(identifier, connection, callback)
 
 blacklist.checkIfAccountIsBlacklisted = function(identifier, connection, callback)
 {
-  if(identifier == undefined)
+  identifier == undefined || connection == undefined ? callback(false, 406, 'ERROR : missing data in the query !') :
+    
+  database.getFromDatabase('blacklist', ['end'], {"account": identifier}, undefined, connection, function(result, code, message)
   {
-    callback(false, 406, 'ERROR : no account identifier provided !');
-  }
-
-  else if(connection == undefined)
-  {
-    callback(false, 406, 'ERROR : no sql connector provided !');
-  }
-
-  else
-  {
-    connection.query(`SELECT end FROM blacklist WHERE account = "${identifier}" ORDER BY end DESC`, function(err, result)
-    {
-      if(err)
-      {
-        callback(false, 500, 'ERROR : ' + err.message + ' !');
-      }
-
-      else if(result.length == 0)
-      {
-        callback(false, 200, 'SUCCESS : account is not blacklisted !');
-      }
-
-      else
-      {
-        callback(true, result[0]['end']);
-      }
-    });
-  }
+    result == false ? callback(false, code, message) : callback(result);
+  });  
 }
 
 /****************************************************************************************************/
