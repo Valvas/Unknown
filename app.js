@@ -39,7 +39,7 @@ let app = express();
 app.set('mysql', connection);
 app.set('salt', salt['salt']);
 
-init.createDatabase(connection, function(result, message){console.log(`${result} : ${message}`);}); //////////////////////////////////////
+init.createDatabases(connection, function(result, message){console.log(`${message}`);}); //////////////////////////////////////
 
 /**************************************************************************************************************/
 
