@@ -12,5 +12,15 @@
       "birthdate": "DATE NOT NULL",
       "number": "VARCHAR(255)"
     }
+  },
+
+  "myDatabase":
+  {
+    "myTable":
+    {
+      "id": "INT UNSIGNED AUTO_INCREMENT PRIMARY KEY",
+      "lastname": "VARCHAR(100) NOT NULL",
+      "firstname": "VARCHAR(100) NOT NULL"
+    }
   }
 }
